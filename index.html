@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>vis</title>
+    <link rel="stylesheet" href="vis.css">
+</head>
+<body>
+    <div id="hue">Drag 'n' drop a file to start!</div>
+    <div class="content" ondragover="event.stopPropagation(); event.preventDefault();" ondrop="event.stopPropagation(); event.preventDefault(); loadFromFile(event.dataTransfer.files[0]);">
+        <canvas id="canvas" width="1000" height="325" style="display: block;"></canvas>
+        <div class="art">
+            <img src="" />
+        </div>
+        <div class="info">
+            <div class="names"></div>
+            <div class="title"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="js/id3.min.js"></script>
+    <script type="text/javascript" src="js/vis.js"></script>
+</body>
+</html>
