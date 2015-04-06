@@ -65,7 +65,7 @@ var AudioHandler = function ()
     function init()
     {
         events.on("update", update);
-        audioContext = new(window.webkitAudioContext || window.AudioContext)();
+        audioContext = new(window.AudioContext)();
         analyser = audioContext.createAnalyser();
         analyser.smoothingTimeConstant = 0.9;
         analyser.fftSize = 128;
