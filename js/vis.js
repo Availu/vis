@@ -52,11 +52,14 @@ function playSound(buffer) {
       var tags = ID3.getAllTags(soundName);
       $('.title').text(tags.title);
       $('.names').text(tags.artist);
-      var dataString = ""; // TODO: fix tags.picture being undefined even when there's a picture embedded??? ('picture' is in docs)
-      for (var i = 0; i < tags.picture.data.length; i++) {
-        dataString += String.fromCharCode(tags.picture.data[i]);
+      if("picture" in tags) {
+        var image = tags.picture;
+        var dataString = ""; // TODO: fix tags.picture being undefined even when there's a picture embedded??? ('picture' is in docs)
+        for (var i = 0; i < image.data.length; i++) {
+          dataString += String.fromCharCode(image.data[i]);
+        }
+        $('.art img').attr('src', "data:" + image.format + ";base64," + window.btoa(dataString));
       }
-      $('.art img').attr('src', "data:" + tags.picture.format + ";base64," + window.btoa(dataString));
   });
   sourceNode.buffer = buffer;
   sourceNode.start(0);
