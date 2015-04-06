@@ -1,47 +1,55 @@
 @import url('http://fonts.googleapis.com/css?family=Lato:700,900');
-
+ * {
+    margin: 0;
+    padding: 0;
+}
+body, html {
+    height:100%;
+}
+#bg {
+    position:absolute;
+    width:100%;
+    height:100%;
+}
 body {
-  font-family: sans-serif;
-  background-color: #111;
+    font-family: sans-serif;
+    background-color: #111;
 }
-
 #hue {
-  color: #fff;
+    color: #fff;
 }
-
 .content {
-  position: absolute;
-  top: 50px;
-  left: 50px;
+    position: absolute;
+    top: calc(50% - 236.25px);
+    left: 50px;
 }
-
 .content .names {
-  color: #fff;
-  display: block;
-  font-size: 3em;
-  font-family: Lato, sans-serif;
-  font-weight: 900;
+    color: #fff;
+    display: block;
+    font-size: 3em;
+    font-family: Lato, sans-serif;
+    font-weight: 900;
 }
-
 .content .title {
-  color: #fff;
-  display: block;
-  font-size: 2em;
-  font-family: Lato, sans-serif;
-  font-weight: 700;
+    color: #fff;
+    display: block;
+    font-size: 2em;
+    font-family: Lato, sans-serif;
+    font-weight: 700;
 }
-
 .art, .info {
-  float: left;
+    float: left;
 }
-
 .art img {
-  margin-top: 15px;
-  max-width: 128px;
-  max-height: 128px;
+    margin-top: 15px;
+    max-width: 128px;
+    max-height: 128px;
 }
-
 .info {
-  margin-left: 50px;
-  margin-top: 25px;
+    margin-left: 50px;
+    margin-top: 25px;
+}
+#audioDebug {
+    position:absolute;
+    background-color: #000;
 }
