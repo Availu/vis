@@ -47,12 +47,16 @@ function loadSound(url) {
   request.send();
 }
 
-
 function playSound(buffer) {
   ID3.loadTags(soundName, function() {
       var tags = ID3.getAllTags(soundName);
       $('.title').text(tags.title);
       $('.names').text(tags.artist);
+      var dataString = ""; // TODO: fix tags.picture being undefined even when there's a picture embedded??? ('picture' is in docs)
+      for (var i = 0; i < tags.picture.data.length; i++) {
+        dataString += String.fromCharCode(tags.picture.data[i]);
+      }
+      $('.art img').attr('src', "data:" + tags.picture.format + ";base64," + window.btoa(dataString));
   });
   sourceNode.buffer = buffer;
   sourceNode.start(0);
