@@ -4,17 +4,19 @@ if (! window.AudioContext) {
   }
   window.AudioContext = window.webkitAudioContext;
 }
+
 var context = new AudioContext();
 var audioBuffer;
 var sourceNode;
 var analyser;
 var javascriptNode;
+var soundName = "track.mp3";
 
 $(".content").hide();
 var ctx = $("#canvas").get()[0].getContext("2d");
 
 setupAudioNodes();
-loadSound("ambush.mp3"); //music file
+loadSound(soundName); //music file
 
 
 function setupAudioNodes() {
@@ -47,6 +49,11 @@ function loadSound(url) {
 
 
 function playSound(buffer) {
+  ID3.loadTags(soundName, function() {
+      var tags = ID3.getAllTags(soundName);
+      $('.title').text(tags.title);
+      $('.names').text(tags.artist);
+  });
   sourceNode.buffer = buffer;
   sourceNode.start(0);
   $(".content").show();

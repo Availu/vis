@@ -30,3 +30,19 @@ body {
   font-family: Lato, sans-serif;
   font-weight: 700;
 }
+
+
+.art, .info {
+  float: left;
+}
+
+.art img {
+  margin-top: 15px;
+  max-width: 128px;
+  max-height: 128px;
+}
+
+.info {
+  margin-left: 50px;
+  margin-top: 25px;
+}
