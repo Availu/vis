@@ -53,6 +53,9 @@ body {
     max-width: 128px;
     max-height: 128px;
 }
+
+img[src=""] { display: none }
+
 .info {
     margin-left: 50px;
     margin-top: 25px;
