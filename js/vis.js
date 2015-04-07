@@ -200,6 +200,7 @@ var AudioHandler = function ()
             onDroppedMP3Loaded(data);
         };
         reader.readAsArrayBuffer(droppedFiles[0]);
+        $("#hue").style.visibility = "hidden";
     }
 
     function onDroppedMP3Loaded(data)
