@@ -64,3 +64,6 @@ img[src=""] { display: none }
     position:absolute;
     background-color: #000;
 }
+img[src=""] {
+    display: none;
+}
