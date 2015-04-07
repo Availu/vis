@@ -17,6 +17,14 @@ body {
 }
 #hue {
     color: #fff;
+    width: 50%;
+    height: 1em;
+    top: calc(50% - 1em);
+    left: calc(50% - 25%);
+    z-index: 100;
+    position: absolute;
+    font-size: 3em;
+    text-align: center;
 }
 .content {
     position: absolute;
