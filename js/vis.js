@@ -2,23 +2,55 @@ var $ = document.querySelector.bind(document);
 var ctx = $("#canvas").getContext("2d");
 var canvas = $("#canvas");
 var bg = $("#bg");
-bg.width = window.innerWidth;
-bg.height = window.innerHeight;
-bg.style.width = window.innerWidth;
-bg.style.width = window.innerHeight;
-var gotBeat = false;
-var isPlayingAudio = false;
-var beatTime = 0;
-var bpmTime = 0;
-var ratedBPMTime = 0;
-canvas.width = window.innerWidth - 75;
-window.onresize = function ()
+var bg_fog = $("#bg_fog");
+var fogs = [];
+var fog = bg_fog.getContext("2d");
+bg_fog.width = window.innerWidth;
+bg_fog.height = window.innerHeight;
+bg_fog.style.width = window.innerWidth;
+bg_fog.style.width = window.innerHeight;
+function generateSmoke()
+{
+    var fog = bg_fog.getContext("2d");
+    for (var i = 0; i < 128; i++)
+    {
+        fogs.push([randomRange(-100, bg_fog.width), randomRange(-100, bg_fog.height),
+            200]);
+    }
+}
+doResizeStuff();
+generateSmoke();
+for (var i = 0; i < fogs.length; i++)
+{
+    var f = fogs[i];
+    drawGradient(fog, f[0], f[1], f[2]);
+}
+boxBlurCanvasRGBA('bg_fog', 0, 0, bg_fog.width, bg_fog.width, 1, 1);
+
+function doResizeStuff()
 {
     canvas.width = window.innerWidth - 75;
     bg.width = window.innerWidth;
     bg.height = window.innerHeight;
     bg.style.width = window.innerWidth;
     bg.style.width = window.innerHeight;
+}
+var gotBeat = false;
+var isPlayingAudio = false;
+var beatTime = 0;
+var bpmTime = 0;
+var ratedBPMTime = 0;
+window.onresize = doResizeStuff
+
+function drawGradient(context, x, y, radius)
+{
+    var radialGradient = context.createRadialGradient(x + radius, y + radius, 0,
+        x + radius, y + radius, radius);
+    var fogDensity = 0.08;
+    radialGradient.addColorStop(0.2, "rgba(130, 130, 130, " + fogDensity + ")");
+    radialGradient.addColorStop(1, "rgba(130, 130, 130, 0)");
+    context.fillStyle = radialGradient;
+    context.fillRect(x, y, 2 * radius, 2 * radius);
 }
 // Beat detection code courtesy of Felix Turner
 // http://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/
@@ -590,7 +622,7 @@ window.onload = function ()
     if (canvas2 && canvas2.getContext)
     {        
         ctx2 = canvas2.getContext("2d");        
-        initStars();        
+        initStars();
         setInterval(loop, 17);       
     }    
 }     
@@ -651,5 +683,5 @@ function loop()
                 ")";
             ctx2.fillRect(px, py, size, size);        
         }      
-    }    
+    }
 }
