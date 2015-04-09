@@ -1,5 +1,5 @@
 var events = new Events();
-var UberVizMain = function ()
+var Visualiser = function ()
 {
     function init()
     {
@@ -39,6 +39,6 @@ var UberVizMain = function ()
 }();
 (function ()
 {
-    UberVizMain.init();
+    Visualiser.init();
     Stars.initStars();
 })();

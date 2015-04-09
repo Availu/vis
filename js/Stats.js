@@ -4,7 +4,6 @@
 
 var Stats = function ()
 {
-
     var startTime = Date.now(),
         prevTime = startTime;
     var ms = 0,
@@ -43,11 +42,9 @@ var Stats = function ()
 
     while (fpsGraph.children.length < 74)
     {
-
         var bar = document.createElement('span');
         bar.style.cssText = 'width:1px;height:30px;float:left;background-color:#113';
         fpsGraph.appendChild(bar);
-
     }
 
     var msDiv = document.createElement('div');
@@ -68,21 +65,16 @@ var Stats = function ()
 
     while (msGraph.children.length < 74)
     {
-
         var bar = document.createElement('span');
         bar.style.cssText = 'width:1px;height:30px;float:left;background-color:#131';
         msGraph.appendChild(bar);
-
     }
 
     var setMode = function (value)
     {
-
         mode = value;
-
         switch (mode)
         {
-
         case 0:
             fpsDiv.style.display = 'block';
             msDiv.style.display = 'none';
@@ -92,35 +84,24 @@ var Stats = function ()
             msDiv.style.display = 'block';
             break;
         }
-
     };
 
     var updateGraph = function (dom, value)
     {
-
         var child = dom.appendChild(dom.firstChild);
         child.style.height = value + 'px';
-
     };
 
     return {
-
         REVISION: 12,
-
         domElement: container,
-
         setMode: setMode,
-
         begin: function ()
         {
-
             startTime = Date.now();
-
         },
-
         end: function ()
         {
-
             var time = Date.now();
 
             ms = time - startTime;
@@ -134,7 +115,6 @@ var Stats = function ()
 
             if (time > prevTime + 1000)
             {
-
                 fps = Math.round((frames * 1000) / (time - prevTime));
                 fpsMin = Math.min(fpsMin, fps);
                 fpsMax = Math.max(fpsMax, fps);
@@ -144,27 +124,17 @@ var Stats = function ()
 
                 prevTime = time;
                 frames = 0;
-
             }
 
             return time;
-
         },
-
         update: function ()
         {
-
             startTime = this.end();
-
         }
-
     }
-
 };
-
 if (typeof module === 'object')
 {
-
     module.exports = Stats;
-
 }
