@@ -93,6 +93,7 @@ img[src=""] {
 
 #audioDebug {
     position: absolute;
+    right: 0px;
     background-color: #000;
 }
 

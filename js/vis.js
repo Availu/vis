@@ -1,12 +1,13 @@
 var limitFps = true;
+var debug = false;
 var fps = 60;
 var now;
 var then = Date.now();
 var interval = 1000 / fps;
 var delta;
-var debug = false;
 
-if (debug) {
+if (debug)
+{
     var stats = new Stats();
     stats.setMode(0); // 0: fps, 1: ms
 
@@ -21,56 +22,41 @@ if (debug) {
 var $ = document.querySelector.bind(document);
 var ctx = $("#canvas").getContext("2d");
 var canvas = $("#canvas");
-var bg = $("#bg");
-var bg_fog = $("#bg_fog");
-var fogs = [];
-var fog = bg_fog.getContext("2d");
-bg_fog.width = window.innerWidth;
-bg_fog.height = window.innerHeight;
-bg_fog.style.width = window.innerWidth;
-bg_fog.style.width = window.innerHeight;
+var background = $("#bg");
+var fog_background = $("#bg_fog");
+fog_background.width = window.innerWidth;
+fog_background.height = window.innerHeight;
+fog_background.style.width = window.innerWidth;
+fog_background.style.width = window.innerHeight;
 
-// function generateSmoke()
-// {
-//     var fog = bg_fog.getContext("2d");
-//     for (var i = 0; i < 128; i++)
-//     {
-//         fogs.push([randomRange(-100, bg_fog.width), randomRange(-100, bg_fog.height),
-//             200]);
-//     }
-// }
-doResizeStuff();
-// generateSmoke();
-// for (var i = 0; i < fogs.length; i++)
-// {
-//     var f = fogs[i];
-//     drawGradient(fog, f[0], f[1], f[2]);
-// }
-// boxBlurCanvasRGBA('bg_fog', 0, 0, bg_fog.width, bg_fog.width, 1, 1);
+var Smoke = new(function ()
+{
+    var prev = [];
+    var particles = [];
+    // The amount of particles to render
+    var particleCount = 15;
+    // The maximum velocity in each direction
+    var maxVelocity = 1;
+    // Create an image object (only need one instance)
+    var imageObj = new Image();
+    // Once the image has been downloaded then set the image on all of the particles
+    imageObj.onload = function ()
+    {
+        particles.forEach(function (particle)
+        {
+            particle.setImage(imageObj);
+        });
+    };
 
-var prev = [];
-var particles = [];
-// The amount of particles to render
-var particleCount = 15;
-// The maximum velocity in each direction
-var maxVelocity = 2;
-// Create an image object (only need one instance)
-var imageObj = new Image();
-// Once the image has been downloaded then set the image on all of the particles
-imageObj.onload = function () {
-    particles.forEach(function (particle) {
-        particle.setImage(imageObj);
-    });
-};
+    // Where to set an artificial y-axis boundary.
+    var cutoff = (fog_background.height / 10) * 7;
 
-// Where to set an artificial y-axis boundary.
-var cutoff = (bg_fog.height / 10) * 7;
+    // Once the callback is arranged then set the source of the image
+    imageObj.src = "smoke2.png";
+    // A function to create a particle object.
 
-// Once the callback is arranged then set the source of the image
-imageObj.src = "smoke2.png";
-// A function to create a particle object.
-
-function Particle(context) {
+    function Particle(context)
+    {
         // Set the initial x and y positions
         this.x = 0;
         this.y = 0;
@@ -82,9 +68,11 @@ function Particle(context) {
         // Store the context which will be used to draw the particle
         this.context = context;
         // The function to draw the particle on the canvas.
-        this.draw = function () {
+        this.draw = function ()
+        {
             // If an image is set draw it
-            if (this.image) {
+            if (this.image)
+            {
                 this.context.drawImage(this.image, this.x - (this.image.width /
                     2), this.y - (this.image.height / 2));
                 // If the image is being rendered do not draw the circle so break out of the draw function
@@ -98,149 +86,199 @@ function Particle(context) {
             this.context.closePath();
         };
         // Update the particle.
-        this.update = function () {
+        this.update = function ()
+        {
             // Update the position of the particle with the addition of the velocity.
             this.x += this.xVelocity;
             this.y += this.yVelocity;
             // Check if has crossed the right edge
-            if (this.x >= bg_fog.width) {
+            if (this.x >= fog_background.width)
+            {
                 this.xVelocity = -this.xVelocity;
-                this.x = bg_fog.width;
+                this.x = fog_background.width;
             }
             // Check if has crossed the left edge
-            else if (this.x <= 0) {
+            else if (this.x <= 0)
+            {
                 this.xVelocity = -this.xVelocity;
                 this.x = 0;
             }
             // Check if has crossed the bottom edge
-            if (this.y >= cutoff) {
+            if (this.y >= cutoff)
+            {
                 this.yVelocity = -this.yVelocity;
                 this.y = cutoff;
             }
             // Check if has crossed the top edge
-            else if (this.y <= 0) {
+            else if (this.y <= 0)
+            {
                 this.yVelocity = -this.yVelocity;
                 this.y = 0;
             }
         };
         // A function to set the position of the particle.
-        this.setPosition = function (x, y) {
+        this.setPosition = function (x, y)
+        {
             this.x = x;
             this.y = y;
         };
         // Function to set the velocity.
-        this.setVelocity = function (x, y) {
+        this.setVelocity = function (x, y)
+        {
             this.xVelocity = x;
             this.yVelocity = y;
         };
-        this.setImage = function (image) {
+        this.setImage = function (image)
+        {
             this.image = image;
         }
     }
-    // A function to generate a random number between 2 values
 
-function generateRandom(min, max) {
-        return Math.random() * (max - min) + min;
+    var context_fog;
+    context_fog = fog_background.getContext('2d');
+    for (var i = 0; i < particleCount; ++i)
+    {
+        var particle = new Particle(context_fog);
+        // Set the position to be inside the canvas bounds
+        particle.setPosition(generateRandom(0, fog_background.width), generateRandom(0,
+            cutoff));
+        // Set the initial velocity to be either random and either negative or positive
+        particle.setVelocity(generateRandom(-maxVelocity, maxVelocity),
+            generateRandom(-maxVelocity, maxVelocity));
+        particles.push(particle);
     }
-    // The canvas context if it is defined.
-var context_fog;
-// Initialise the scene and set the context if possible
-var canvas_fog = $('#bg_fog');
-context_fog = bg_fog.getContext('2d');
-for (var i = 0; i < particleCount; ++i) {
-    var particle = new Particle(context_fog);
-    // Set the position to be inside the canvas bounds
-    particle.setPosition(generateRandom(0, bg_fog.width), generateRandom(0,
-        cutoff));
-    // Set the initial velocity to be either random and either negative or positive
-    particle.setVelocity(generateRandom(-maxVelocity, maxVelocity),
-        generateRandom(-maxVelocity, maxVelocity));
-    particles.push(particle);
-}
 
-function init() {
-        if (bg_fog.getContext) {
-            // Set the context variable so it can be re-used
-            for (var i = 0; i < particleCount; ++i) {
+    this.initSmoke = function ()
+    {
+        if (fog_background.getContext)
+        {
+            for (var i = 0; i < particleCount; ++i)
+            {
                 var particle = particles[i];
-                if (particle.x !== 0 && particle.y !== 0 && prev.length > 0) {
-                    particle.setPosition(particle.x * (bg_fog.width / prev[0]), particle.y * (bg_fog.height / prev[1]));
-                } else {
-                    particle.setPosition(generateRandom(0, bg_fog.width),
+                if (particle.x !== 0 && particle.y !== 0 && prev.length > 0)
+                {
+                    particle.setPosition(particle.x * (fog_background.width / prev[0]), particle.y * (fog_background.height / prev[1]));
+                }
+                else
+                {
+                    particle.setPosition(generateRandom(0, fog_background.width),
                         generateRandom(0, cutoff));
-                    // Set the initial velocity to be either random and either negative or positive
                     particle.setVelocity(generateRandom(-maxVelocity, maxVelocity),
                         generateRandom(-maxVelocity, maxVelocity));
                 }
             }
-            // Create the particles and set their initial positions and velocities
-        } else {
+        }
+        else
+        {
             alert("Please use a modern browser");
         }
     }
-    // The function to draw the scene
 
-function draw() {
-        // Clear the drawing surface and fill it with a black background
+    this.drawSmoke = function ()
+    {
         context_fog.fillStyle = "rgba(0, 0, 0, 0.5)";
-        context_fog.fillRect(0, 0, bg_fog.width, bg_fog.height);
-        // Go through all of the particles and draw them.
-        particles.forEach(function (particle) {
+        context_fog.fillRect(0, 0, fog_background.width, fog_background.height);
+        particles.forEach(function (particle)
+        {
             particle.draw();
         });
     }
-    // Update the scene
 
-function update() {
-        particles.forEach(function (particle) {
+    this.updateSmoke = function ()
+    {
+        particles.forEach(function (particle)
+        {
             particle.update();
         });
     }
-    // Initialize the scene
-init();
-// If the context is set then we can draw the scene (if not then the browser does not support canvas)
-// if (context_fog) {
-//     function does() {
-//         update();
-//         // Draw the scene
-//         draw();
-//         requestAnimationFrame(does);
-//     }
-//     requestAnimationFrame(does);
-// }
+})();
+var Stars = new(function Stars()
+{
+    var MAX_DEPTH = Math.pow(2, 5);     
+    var ctx2 = background.getContext("2d");    
+    var stars = new Array(Math.pow(2, 8));
 
-function doResizeStuff() {
-    canvas.width = window.innerWidth - 75;
-    bg.width = window.innerWidth;
-    bg.height = window.innerHeight;
-    bg.style.width = window.innerWidth;
-    bg.style.width = window.innerHeight;
-    prev = [bg_fog.width, bg_fog.height];
-    bg_fog.width = window.innerWidth;
-    bg_fog.height = window.innerHeight;
-    bg_fog.style.width = window.innerWidth;
-    bg_fog.style.width = window.innerHeight;
-    init();
+    this.initStars = function ()
+    {      
+        for (var i = 0; i < stars.length; i++)
+        {        
+            stars[i] = {          
+                x: generateRandom(-75, 75),
+                y: generateRandom(-75, 75),
+                z: generateRandom(1, MAX_DEPTH)         
+            }      
+        }    
+    };
+
+    this.loopStars = function ()
+    {      
+        var halfWidth  = background.width / 2;      
+        var halfHeight = background.height / 2;       
+        ctx2.fillStyle = "rgba(0,0,0,0.5)";      
+        ctx2.fillRect(0, 0, background.width, background.height);   
+        for (var i = 0; i < stars.length; i++)
+        {   
+            if (AudioHandler.beatTime() < 6 && AudioHandler.gotBeat() && AudioHandler.isPlayingAudio()) 
+            { 
+                stars[i].z -= 0.025;
+            }
+            else if (!AudioHandler.isPlayingAudio())
+            {
+                stars[i].z -= 0;
+            }
+            else
+            {
+                stars[i].z -= 0.01;
+            }
+            if (stars[i].z <= 0)
+            {   
+                stars[i].x = generateRandom(-75, 75);          
+                stars[i].y = generateRandom(-75, 75);          
+                stars[i].z = MAX_DEPTH;        
+            }         
+            var k  = 128.0 / stars[i].z;        
+            var px = stars[i].x * k + halfWidth;        
+            var py = stars[i].y * k + halfHeight;         
+            if (px >= 0 && px <= background.width && py >= 0 && py <= background.height)
+            {          
+                var size = (1 - stars[i].z / 32.0) * 4;          
+                ctx2.fillStyle = "rgba(255,255,255," + (size / 4) +
+                    ")";
+                ctx2.fillRect(px, py, size, size);        
+            }      
+        }
+    };
+})();
+
+doResizeStuff();
+
+function generateRandom(min, max)
+{
+    return Math.random() * (max - min) + min;
 }
-var gotBeat = false;
-var isPlayingAudio = false;
-var beatTime = 0;
-var bpmTime = 0;
-var ratedBPMTime = 0;
+
+Smoke.initSmoke();
+
+function doResizeStuff()
+{
+    canvas.width = window.innerWidth - 75;
+    background.width = window.innerWidth;
+    background.height = window.innerHeight;
+    background.style.width = window.innerWidth;
+    background.style.width = window.innerHeight;
+    prev = [fog_background.width, fog_background.height];
+    fog_background.width = window.innerWidth;
+    fog_background.height = window.innerHeight;
+    fog_background.style.width = window.innerWidth;
+    fog_background.style.width = window.innerHeight;
+    Smoke.initSmoke();
+}
 window.onresize = doResizeStuff
 
-function drawGradient(context, x, y, radius) {
-        var radialGradient = context.createRadialGradient(x + radius, y + radius, 0,
-            x + radius, y + radius, radius);
-        var fogDensity = 0.08;
-        radialGradient.addColorStop(0.2, "rgba(130, 130, 130, " + fogDensity + ")");
-        radialGradient.addColorStop(1, "rgba(130, 130, 130, 0)");
-        context.fillStyle = radialGradient;
-        context.fillRect(x, y, 2 * radius, 2 * radius);
-    }
-    // Beat detection code courtesy of Felix Turner
-    // http://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/
-var AudioHandler = function () {
+// Beat detection code courtesy of Felix Turner
+// http://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/
+var AudioHandler = function ()
+{
     //PUBLIC/////////////
     var waveData = []; //waveform - from 0 - 1 . no sound is 0.5. Array [binCount]
     var levelsData = []; //levels of each frequecy - from 0 - 1 . no sound is 0. Array [levelsCount]
@@ -285,22 +323,24 @@ var AudioHandler = function () {
     var analyser;
     var high = 0;
 
-    function init() {
+    function init()
+    {
         //EVENT HANDLERS
         events.on("update", update);
         //Get an Audio Context
-        try {
+        try
+        {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             audioContext = new window.AudioContext();
-        } catch (e) {
+        }
+        catch (e)
+        {
             //Web Audio API is not supported in this browser
             alert(
                 "Sorry! This browser does not support the Web Audio API. Please use Chrome, Safari or Firefox."
             );
             return;
         }
-        //audioContext = new window.webkitAudioContext();
-        //processor = audioContext.createJavaScriptNode(2048 , 1 , 1 );
         analyser = audioContext.createAnalyser();
         analyser.smoothingTimeConstant = 0.9; //smooths out bar chart movement over time
         analyser.fftSize = 128;
@@ -312,7 +352,8 @@ var AudioHandler = function () {
         freqByteData = new Uint8Array(binCount);
         timeByteData = new Uint8Array(binCount);
         var length = 256;
-        for (var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++)
+        {
             levelHistory.push(0);
         }
         //INIT DEBUG DRAW
@@ -334,189 +375,193 @@ var AudioHandler = function () {
         timer = setInterval(onBMPBeat, msecsAvg);
     }
 
-    function initSound() {
+    function initSound()
+    {
         source = audioContext.createBufferSource();
         source.connect(analyser);
     }
 
-    function startSound() {
+    function startSound()
+    {
         source.buffer = audioBuffer;
         source.loop = true;
         source.start(0.0);
         isPlayingAudio = true;
-        window.isPlayingAudio = true;
     }
 
-    function stopSound() {
+    function stopSound()
+    {
         isPlayingAudio = false;
-        window.isPlayingAudio = false;
-        if (source) {
+        if (source)
+        {
             source.stop(0);
             source.disconnect();
         }
         debugCtx.clearRect(0, 0, debugW, debugH);
     }
 
-    function onShowDebug() {
-            if (ControlsHandler.audioParams.showDebug) {
-                $("#audioDebug").style.visibility = "visible";
-            } else {
-                $("#audioDebug").style.visibility = "hidden";
-            }
+    function onShowDebug()
+    {
+        if (debug)
+        {
+            $("#audioDebug").style.visibility = "visible";
         }
-        //load dropped MP3
+        else
+        {
+            $("#audioDebug").style.visibility = "hidden";
+        }
+    }
 
-    function onMP3Drop(evt) {
-            stopSound();
-            initSound();
-            var droppedFiles = evt.dataTransfer.files;
-            var reader = new FileReader();
-            id3(droppedFiles[0], function (err, tags) {
-                console.dir(tags);
-                $(".title").innerHTML = tags.title;
-                $(".names").innerHTML = tags.artist;
-                if ("v2" in tags) {
-                    if ("image" in tags.v2) {
-                        var image = tags.v2.image;
-                        var binary = '';
-                        var bytes = new Uint8Array(image.data);
-                        var len = bytes.byteLength;
-                        for (var i = 0; i < len; i++) {
-                            binary += String.fromCharCode(bytes[i]);
-                        }
-                        $(".art img").src = "data:" + image.mime + ";base64," +
-                            window.btoa(binary);
-                    } else {
-                        $(".art img").src = "";
+    function onMP3Drop(evt)
+    {
+        stopSound();
+        initSound();
+        var droppedFiles = evt.dataTransfer.files;
+        var reader = new FileReader();
+        id3(droppedFiles[0], function (err, tags)
+        {
+            console.dir(tags);
+            $(".title").innerHTML = tags.title;
+            $(".names").innerHTML = tags.artist;
+            if ("v2" in tags)
+            {
+                if ("image" in tags.v2)
+                {
+                    var image = tags.v2.image;
+                    var binary = '';
+                    var bytes = new Uint8Array(image.data);
+                    var len = bytes.byteLength;
+                    for (var i = 0; i < len; i++)
+                    {
+                        binary += String.fromCharCode(bytes[i]);
                     }
+                    $(".art img").src = "data:" + image.mime + ";base64," +
+                        window.btoa(binary);
                 }
-            });
-            reader.onload = function (fileEvent) {
-                var data = fileEvent.target.result;
-                onDroppedMP3Loaded(data);
-            };
-            reader.readAsArrayBuffer(droppedFiles[0]);
-            $("#hue").style.visibility = "hidden";
-        }
-        //called from dropped MP3
+                else
+                {
+                    $(".art img").src = "";
+                }
+            }
+        });
+        reader.onload = function (fileEvent)
+        {
+            var data = fileEvent.target.result;
+            onDroppedMP3Loaded(data);
+        };
+        reader.readAsArrayBuffer(droppedFiles[0]);
+        $("#hue").style.visibility = "hidden";
+    }
 
-    function onDroppedMP3Loaded(data) {
-        if (audioContext.decodeAudioData) {
-            audioContext.decodeAudioData(data, function (buffer) {
+    function onDroppedMP3Loaded(data)
+    {
+        if (audioContext.decodeAudioData)
+        {
+            audioContext.decodeAudioData(data, function (buffer)
+            {
                 audioBuffer = buffer;
                 startSound();
-            }, function (e) {
+            }, function (e)
+            {
                 console.log(e);
             });
-        } else {
+        }
+        else
+        {
             audioBuffer = audioContext.createBuffer(data, false);
             startSound();
         }
     }
 
-    function onBeat() {
-        //console.log("BEAT");
-        // TweenLite.to(this, 1, {debugLum:, ease:Power2.easeOut});
-        // TweenMax.to(this, 1, css:{ color: "FFFFFF" } );
-        //experimental combined beat + bpm mode
+    function onBeat()
+    {
         gotBeat = true;
-        window.gotBeat = true;
         if (ControlsHandler.audioParams.bpmMode) return;
         events.emit("onBeat");
     }
 
-    function onBMPBeat() {
-            //console.log("onBMPBeat");
-            bpmStart = new Date().getTime();
-            if (!ControlsHandler.audioParams.bpmMode) return;
-            //only fire bpm beat if there was an on onBeat in last timeframe
-            //experimental combined beat + bpm mode
-            //if (gotBeat){
-            //NeonShapes.onBPMBeat();
-            //GoldShapes.onBPMBeat();
-            gotBeat = false;
-            window.gotBeat = false;
-            //}
-        }
-        //called every frame
-        //update published viz data
+    function onBMPBeat()
+    {
+        bpmStart = new Date().getTime();
+        if (!ControlsHandler.audioParams.bpmMode) return;
+        gotBeat = false;
+    }
 
-    function update() {
+    function update()
+    {
         now = Date.now();
         delta = now - then;
         if (delta > interval) then = now - (delta % interval);
-        if (delta > interval || !limitFps) {
+        if (delta > interval || !limitFps)
+        {
             if (debug) stats.begin();
-            //console.log("audio.update");
-            window.update();
-            // Draw the scene
-            window.draw();
-            if (!isPlayingAudio) {
+            Smoke.updateSmoke();
+            Smoke.drawSmoke();
+            Stars.loopStars();
+            if (!isPlayingAudio)
+            {
                 if (debug) stats.end();
                 return;
             }
-            //GET DATA
             analyser.getByteFrequencyData(freqByteData); //<-- bar chart
             analyser.getByteTimeDomainData(timeByteData); // <-- waveform
-            //normalize waveform data
-            for (var i = 0; i < binCount; i++) {
+            for (var i = 0; i < binCount; i++)
+            {
                 waveData[i] = ((timeByteData[i] - 128) / 128) * ControlsHandler.audioParams
                     .volSens;
             }
-            //TODO - cap levels at 1 and -1 ?
-            //normalize levelsData from freqByteData
-            for (var i = 0; i < levelsCount; i++) {
+            for (var i = 0; i < levelsCount; i++)
+            {
                 var sum = 0;
-                for (var j = 0; j < levelBins; j++) {
+                for (var j = 0; j < levelBins; j++)
+                {
                     sum += freqByteData[(i * levelBins) + j];
                 }
                 levelsData[i] = sum / levelBins / 256 * ControlsHandler.audioParams
-                    .volSens; //freqData maxs at 256
-                //adjust for the fact that lower levels are percieved more quietly
-                //make lower levels smaller
-                //levelsData[i] *=  1 + (i/levelsCount)/2; //??????
+                    .volSens;
             }
-            //TODO - cap levels at 1?
-            //GET AVG LEVEL
             var sum = 0;
-            for (var j = 0; j < levelsCount; j++) {
+            for (var j = 0; j < levelsCount; j++)
+            {
                 sum += levelsData[j];
             }
             volume = sum / levelsCount;
-            // high = Math.max(high,level);
             levelHistory.push(volume);
             levelHistory.shift(1);
-            //BEAT DETECTION
-            if (volume > beatCutOff && volume > BEAT_MIN) {
+            if (volume > beatCutOff && volume > BEAT_MIN)
+            {
                 onBeat();
                 beatCutOff = volume * 1.1;
                 beatTime = 0;
-                window.beatTime = 0;
-            } else {
-                if (beatTime <= ControlsHandler.audioParams.beatHoldTime) {
+            }
+            else
+            {
+                if (beatTime <= ControlsHandler.audioParams.beatHoldTime)
+                {
                     beatTime++;
-                    window.beatTime++;
-                } else {
+                }
+                else
+                {
                     beatCutOff *= ControlsHandler.audioParams.beatDecayRate;
                     beatCutOff = Math.max(beatCutOff, BEAT_MIN);
                 }
             }
             bpmTime = (new Date().getTime() - bpmStart) / msecsAvg;
-            //trace(bpmStart);
-            if (ControlsHandler.audioParams.showDebug) debugDraw();
+            if (debug) debugDraw();
             normalDraw();
             if (debug) stats.end();
         }
     }
 
-    function normalDraw() {
+    function normalDraw()
+    {
         window.ctx.clearRect(0, 0, window.canvas.width, window.canvas.height);
         window.ctx.fillStyle = "#1AAAAE"; //bar color
         var meterNum = Math.round(window.canvas.width / (14 + 4) / 2);
         var width = 14;
         var spacing = 4;
-        // var step = Math.round(freqByteData.length / meterNum);
-        for (var i = 0; i < (meterNum); i++) {
+        for (var i = 0; i < (meterNum); i++)
+        {
             var value = freqByteData[i];
             var distFromCentre = (window.canvas.width / 2) - (width) - (spacing *
                 4) + i * (width + spacing) + (spacing * 2.5);
@@ -528,37 +573,34 @@ var AudioHandler = function () {
         }
     }
 
-    function debugDraw() {
+    function debugDraw()
+    {
         debugCtx.clearRect(0, 0, debugW, debugH);
-        //draw chart bkgnd
         debugCtx.fillStyle = "#000";
         debugCtx.fillRect(0, 0, debugW, debugH);
-        //DRAW BAR CHART
-        // Break the samples up into bars
         var barWidth = chartW / levelsCount;
         debugCtx.fillStyle = gradient;
-        for (var i = 0; i < levelsCount; i++) {
+        for (var i = 0; i < levelsCount; i++)
+        {
             debugCtx.fillRect(i * barWidth, chartH, barWidth - debugSpacing, -
                 levelsData[i] * chartH);
         }
-        //DRAW AVE LEVEL + BEAT COLOR
-        if (beatTime < 10) {
+        if (beatTime < 10)
+        {
             debugCtx.fillStyle = "#FFF";
         }
         debugCtx.fillRect(chartW, chartH, aveBarWidth, -volume * chartH);
-        //DRAW CUT OFF
         debugCtx.beginPath();
         debugCtx.moveTo(chartW, chartH - beatCutOff * chartH);
         debugCtx.lineTo(chartW + aveBarWidth, chartH - beatCutOff * chartH);
         debugCtx.stroke();
-        //DRAW WAVEFORM
         debugCtx.beginPath();
-        for (var i = 0; i < binCount; i++) {
+        for (var i = 0; i < binCount; i++)
+        {
             debugCtx.lineTo(i / binCount * chartW, waveData[i] * chartH / 2 +
                 chartH / 2);
         }
         debugCtx.stroke();
-        //DRAW BPM
         var bpmMaxSize = bpmHeight;
         var size = bpmMaxSize - bpmTime * bpmMaxSize;
         debugCtx.fillStyle = "#020";
@@ -567,125 +609,74 @@ var AudioHandler = function () {
         debugCtx.fillRect((bpmMaxSize - size) / 2, chartH + (bpmMaxSize - size) /
             2, size, size);
     }
-
-    function onTap() {
-        console.log("ontap");
-        clearInterval(timer);
-        timeSeconds = new Date();
-        msecs = timeSeconds.getTime();
-        //after 2 seconds, new tap counts as a new sequnce
-        if ((msecs - msecsPrevious) > 2000) {
-            count = 0;
-        }
-        if (count === 0) {
-            console.log("First Beat");
-            msecsFirst = msecs;
-            count = 1;
-        } else {
-            bpmAvg = 60000 * count / (msecs - msecsFirst);
-            msecsAvg = (msecs - msecsFirst) / count;
-            count++;
-            console.log("bpm: " + Math.round(bpmAvg * 100) / 100 + " , taps: " +
-                count + " , msecs: " + msecsAvg);
-            onBMPBeat();
-            clearInterval(timer);
-            timer = setInterval(onBMPBeat, msecsAvg);
-        }
-        msecsPrevious = msecs;
-    }
-
-    function onChangeBPMRate() {
-        //change rate without losing current beat time
-        //get ratedBPMTime from real bpm
-        switch (ControlsHandler.audioParams.bpmRate) {
-        case -3:
-            ratedBPMTime = msecsAvg * 8;
-            break;
-        case -2:
-            ratedBPMTime = msecsAvg * 4;
-            break;
-        case -1:
-            ratedBPMTime = msecsAvg * 2;
-            break;
-        case 0:
-            ratedBPMTime = msecsAvg;
-            break;
-        case 1:
-            ratedBPMTime = msecsAvg / 2;
-            break;
-        case 2:
-            ratedBPMTime = msecsAvg / 4;
-            break;
-        case 3:
-            ratedBPMTime = msecsAvg / 8;
-            break;
-        case 4:
-            ratedBPMTime = msecsAvg / 16;
-            break;
-        }
-        console.log("ratedBPMTime: " + ratedBPMTime);
-        //get distance to next beat
-        bpmTime = (new Date().getTime() - bpmStart) / msecsAvg;
-        timeToNextBeat = ratedBPMTime - (new Date().getTime() - bpmStart);
-        //set one-off timer for that
-        clearInterval(timer);
-        timer = setInterval(onFirstBPM, timeToNextBeat);
-        //set timer for new beat rate
-    }
-
-    function onFirstBPM() {
-            clearInterval(timer);
-            timer = setInterval(onBMPBeat, ratedBPMTime);
-        }
-        // function toggleBPMMode(tog){
-        //  console.log("PP");
-        // }
+    /* var gotBeat = false;
+    var isPlayingAudio = false;
+    var beatTime = 0;
+    var bpmTime = 0;
+    var ratedBPMTime = 0; */
     return {
         onMP3Drop: onMP3Drop,
         onShowDebug: onShowDebug,
         update: update,
         init: init,
-        onTap: onTap,
-        onChangeBPMRate: onChangeBPMRate,
-        getLevelsData: function () {
+        getLevelsData: function ()
+        {
             return levelsData;
         },
-        getVolume: function () {
+        getVolume: function ()
+        {
             return volume;
         },
-        getBPMTime: function () {
+        getBPMTime: function ()
+        {
             return bpmTime;
+        },
+        gotBeat: function()
+        {
+            return gotBeat;
+        },
+        isPlayingAudio: function()
+        {
+            return isPlayingAudio;
+        },
+        beatTime: function()
+        {
+            return beatTime;
         },
     };
 }();
 
-function Events(e) {
-        var t = {},
-            n, r, i, s = Array;
-        e = e || this;
-        e.on = function (e, n, r) {
-            t[e] || (t[e] = []);
-            t[e].push({
-                f: n,
-                c: r
-            })
-        };
-        e.off = function (e, i) {
-            r = t[e] || [];
-            n = r.length = i ? r.length : 0;
-            while (~--n < 0) i == r[n].f && r.splice(n, 1)
-        };
-        e.emit = function () {
-            i = s.apply([], arguments);
-            r = t[i.shift()] || [];
-            i = i[0] instanceof s && i[0] || i;
-            n = r.length;
-            while (~--n < 0) r[n].f.apply(r[n].c, i)
-        }
+function Events(e)
+{
+    var t = {},
+        n, r, i, s = Array;
+    e = e || this;
+    e.on = function (e, n, r)
+    {
+        t[e] || (t[e] = []);
+        t[e].push(
+        {
+            f: n,
+            c: r
+        })
+    };
+    e.off = function (e, i)
+    {
+        r = t[e] || [];
+        n = r.length = i ? r.length : 0;
+        while (~--n < 0) i == r[n].f && r.splice(n, 1)
+    };
+    e.emit = function ()
+    {
+        i = s.apply([], arguments);
+        r = t[i.shift()] || [];
+        i = i[0] instanceof s && i[0] || i;
+        n = r.length;
+        while (~--n < 0) r[n].f.apply(r[n].c, i)
     }
-    //UberViz ControlsHandler
-    //Handles side menu controls
-var ControlsHandler = function () {
+}
+var ControlsHandler = function ()
+{
     var audioParams = {
         showDebug: false,
         volSens: 1,
@@ -696,7 +687,8 @@ var ControlsHandler = function () {
         sampleURL: ""
     };
 
-    function init() {
+    function init()
+    {
         AudioHandler.onShowDebug();
     }
     return {
@@ -705,9 +697,12 @@ var ControlsHandler = function () {
     };
 }();
 var events = new Events();
-var UberVizMain = function () {
-    function init() {
-        document.onselectstart = function () {
+var UberVizMain = function ()
+{
+    function init()
+    {
+        document.onselectstart = function ()
+        {
             return false;
         };
         document.addEventListener("drop", onDocumentDrop, false);
@@ -717,19 +712,21 @@ var UberVizMain = function () {
         update();
     }
 
-    function update() {
+    function update()
+    {
         requestAnimationFrame(update);
-        window.bpmTime = AudioHandler.getBPMTime();
         events.emit("update");
     }
 
-    function onDocumentDragOver(evt) {
+    function onDocumentDragOver(evt)
+    {
         evt.stopPropagation();
         evt.preventDefault();
         return false;
     }
 
-    function onDocumentDrop(evt) {
+    function onDocumentDrop(evt)
+    {
         evt.stopPropagation();
         evt.preventDefault();
         AudioHandler.onMP3Drop(evt);
@@ -738,64 +735,8 @@ var UberVizMain = function () {
         init: init
     };
 }();
-(function () {
+(function ()
+{
     UberVizMain.init();
+    Stars.initStars();
 })();
-MAX_DEPTH = Math.pow(2, 5);     
-var canvas2, ctx2;    
-var stars = new Array(Math.pow(2, 8));     
-window.onload = function () {      
-    canvas2 = document.getElementById("bg");      
-    if (canvas2 && canvas2.getContext) {        
-        ctx2 = canvas2.getContext("2d");        
-        initStars();
-        setInterval(loop, 17);       
-    }    
-}     
-
-function randomRange(minVal, maxVal) {      
-    return Math.floor(Math.random() * (maxVal - minVal - 1)) + minVal;    
-}     
-
-function initStars() {      
-    for (var i = 0; i < stars.length; i++) {        
-        stars[i] = {          
-            x: randomRange(-75, 75),
-            y: randomRange(-75, 75),
-            z: randomRange(1, MAX_DEPTH)         
-        }      
-    }    
-}
-
-function loop() {      
-    var halfWidth  = canvas2.width / 2;      
-    var halfHeight = canvas2.height / 2;       
-    ctx2.fillStyle = "rgba(0,0,0,0.5)";      
-    ctx2.fillRect(0, 0, canvas2.width, canvas2.height);   
-    for (var i = 0; i < stars.length; i++) {   
-        if (beatTime < 6 && gotBeat && isPlayingAudio)  { 
-            stars[i].z -= 0.025;
-        } else if (!isPlayingAudio) {
-            stars[i].z -= 0;
-        } else {
-            stars[i].z -= 0.01;
-        }
-        if (stars[i].z <= 0) {   
-            stars[i].x = randomRange(-75, 75);          
-            stars[i].y = randomRange(-75, 75);          
-            stars[i].z = MAX_DEPTH;        
-        }         
-        var k  = 128.0 / stars[i].z;        
-        var px = stars[i].x * k + halfWidth;        
-        var py = stars[i].y * k + halfHeight;         
-        if (px >= 0 && px <= canvas2.width && py >= 0 && py <= canvas2.height) {          
-            var size = (1 - stars[i].z / 32.0) * 4;          
-            //             var shade = parseInt((1 - stars[i].z / 32.0) * 200) + 55;          
-            //             ctx2.fillStyle = "rgba(" + shade + "," + shade + "," + shade +
-            //                 ",1)";  
-            ctx2.fillStyle = "rgba(255,255,255," + (size / 4) +
-                ")";
-            ctx2.fillRect(px, py, size, size);        
-        }      
-    }
-}
