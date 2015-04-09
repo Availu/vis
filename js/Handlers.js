@@ -163,31 +163,31 @@ var AudioHandler = function ()
         initSound();
         var droppedFiles = evt.dataTransfer.files;
         var reader = new FileReader();
-        id3(droppedFiles[0], function (err, tags)
+        var url = droppedFiles[0].urn || droppedFiles[0].name;
+        ID3.loadTags(url, function ()
         {
-            console.dir(tags);
+            var tags = ID3.getAllTags(url);
             $(".title").innerHTML = tags.title;
             $(".names").innerHTML = tags.artist;
-            if ("v2" in tags)
+            if ("picture" in tags || "APIC" in tags)
             {
-                if ("image" in tags.v2)
+                var image = tags.picture || tags.APIC[0].data;
+                var base64String = "";
+                for (var i = 0; i < image.data.length; i++)
                 {
-                    var image = tags.v2.image;
-                    var binary = '';
-                    var bytes = new Uint8Array(image.data);
-                    var len = bytes.byteLength;
-                    for (var i = 0; i < len; i++)
-                    {
-                        binary += String.fromCharCode(bytes[i]);
-                    }
-                    $(".art img").src = "data:" + image.mime + ";base64," +
-                        window.btoa(binary);
+                    base64String += String.fromCharCode(image.data[i]);
                 }
-                else
-                {
-                    $(".art img").src = "";
-                }
+                $(".art img").src = "data:" + image.format + ";base64," +
+                    window.btoa(base64String);
             }
+            else
+            {
+                $(".art img").src = "";
+            }
+        },
+        {
+            tags: ["artist", "title", "picture"],
+            dataReader: FileAPIReader(droppedFiles[0])
         });
         reader.onload = function (fileEvent)
         {
