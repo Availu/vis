@@ -45,3 +45,9 @@ gui.closed = true;
 gui.add(Config, 'limitFPS').name("Limit FPS");
 gui.add(Config, 'FPS', 1, 144).name("Maximum FPS");
 gui.add(Config, 'debug').name("Show Debug UI");
+Config.gain = 100;
+gui.add(Config, 'gain', 0, 100).name("Volume").onChange(function(value){
+    gainNode.gain.value = Math.pow(parseInt(value) / parseInt(100), 2);
+});
+gui.remember(Config);
+gui.UseLocalStorage = true;

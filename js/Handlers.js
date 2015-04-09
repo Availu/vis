@@ -13,6 +13,8 @@ stats.domElement.style.top = '0px';
 
 document.body.appendChild(stats.domElement);
 
+var gainNode;
+
 // Beat detection code courtesy of Felix Turner
 // http://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/
 var AudioHandler = function ()
@@ -80,11 +82,13 @@ var AudioHandler = function ()
             return;
         }
         analyser = audioContext.createAnalyser();
+        gainNode = audioContext.createGain();
         analyser.smoothingTimeConstant = 0.9; //smooths out bar chart movement over time
         analyser.fftSize = 128;
         analyser.minDecibels = -70;
         analyser.maxDecibels = -15;
-        analyser.connect(audioContext.destination);
+        analyser.connect(gainNode);
+        gainNode.connect(audioContext.destination);
         binCount = analyser.frequencyBinCount; // = 512
         levelBins = Math.floor(binCount / levelsCount); //number of bins in each level
         freqByteData = new Uint8Array(binCount);
