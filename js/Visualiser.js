@@ -37,8 +37,11 @@ var Visualiser = function ()
         init: init
     };
 }();
-(function ()
-{
-    Visualiser.init();
-    Stars.initStars();
-})();
+
+Stars.initStars();
+Visualiser.init();
+var gui = new dat.GUI();
+gui.closed = true;
+gui.add(Config, 'limitFPS').name("Limit FPS");
+gui.add(Config, 'FPS', 1, 144).name("Maximum FPS");
+gui.add(Config, 'debug').name("Show Debug UI");

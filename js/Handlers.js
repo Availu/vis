@@ -1,20 +1,17 @@
 var now;
 var then = Date.now();
-var interval = 1000 / fps;
+var interval = 1000 / Config.FPS;
 var delta;
 
-if (debug)
-{
-    var stats = new Stats();
-    stats.setMode(0); // 0: fps, 1: ms
+var stats = new Stats();
+stats.setMode(0); // 0: fps, 1: ms
 
-    // align top-left
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.left = '0px';
-    stats.domElement.style.top = '0px';
+// align top-left
+stats.domElement.style.position = 'absolute';
+stats.domElement.style.left = '0px';
+stats.domElement.style.top = '0px';
 
-    document.body.appendChild(stats.domElement);
-}
+document.body.appendChild(stats.domElement);
 
 // Beat detection code courtesy of Felix Turner
 // http://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/
@@ -97,7 +94,7 @@ var AudioHandler = function ()
         {
             levelHistory.push(0);
         }
-        //INIT DEBUG DRAW
+        //INIT Config.debug DRAW
         var canvas = document.getElementById("audioDebug");
         debugCtx = canvas.getContext("2d");
         debugCtx.width = debugW;
@@ -143,13 +140,20 @@ var AudioHandler = function ()
 
     function onShowDebug()
     {
-        if (debug)
+        var elms = document.querySelectorAll('.debug');
+        for (var elm in elms)
         {
-            $("#audioDebug").style.visibility = "visible";
-        }
-        else
-        {
-            $("#audioDebug").style.visibility = "hidden";
+            if (typeof elms[elm] === "object")
+            {
+                if (Config.debug)
+                {
+                    elms[elm].style.visibility = "visible";
+                }
+                else
+                {
+                    elms[elm].style.visibility = "hidden";
+                }
+            }
         }
     }
 
@@ -230,18 +234,20 @@ var AudioHandler = function ()
 
     function update()
     {
+        var interval = 1000 / Config.FPS;
+        onShowDebug();
         now = Date.now();
         delta = now - then;
         if (delta > interval) then = now - (delta % interval);
-        if (delta > interval || !limitFps)
+        if (delta > interval || !Config.limitFPS)
         {
-            if (debug) stats.begin();
+            if (Config.debug) stats.begin();
             Smoke.updateSmoke();
             Smoke.drawSmoke();
             Stars.loopStars();
             if (!isPlayingAudio)
             {
-                if (debug) stats.end();
+                if (Config.debug) stats.end();
                 return;
             }
             analyser.getByteFrequencyData(freqByteData); //<-- bar chart
@@ -288,9 +294,9 @@ var AudioHandler = function ()
                 }
             }
             bpmTime = (new Date().getTime() - bpmStart) / msecsAvg;
-            if (debug) debugDraw();
+            if (Config.debug) debugDraw();
             normalDraw();
-            if (debug) stats.end();
+            if (Config.debug) stats.end();
         }
     }
 
@@ -315,41 +321,41 @@ var AudioHandler = function ()
     }
 
     function debugDraw()
+    {
+        debugCtx.clearRect(0, 0, debugW, debugH);
+        debugCtx.fillStyle = "#000";
+        debugCtx.fillRect(0, 0, debugW, debugH);
+        var barWidth = chartW / levelsCount;
+        debugCtx.fillStyle = gradient;
+        for (var i = 0; i < levelsCount; i++)
         {
-            debugCtx.clearRect(0, 0, debugW, debugH);
-            debugCtx.fillStyle = "#000";
-            debugCtx.fillRect(0, 0, debugW, debugH);
-            var barWidth = chartW / levelsCount;
-            debugCtx.fillStyle = gradient;
-            for (var i = 0; i < levelsCount; i++)
-            {
-                debugCtx.fillRect(i * barWidth, chartH, barWidth - debugSpacing, -
-                    levelsData[i] * chartH);
-            }
-            if (beatTime < 10)
-            {
-                debugCtx.fillStyle = "#FFF";
-            }
-            debugCtx.fillRect(chartW, chartH, aveBarWidth, -volume * chartH);
-            debugCtx.beginPath();
-            debugCtx.moveTo(chartW, chartH - beatCutOff * chartH);
-            debugCtx.lineTo(chartW + aveBarWidth, chartH - beatCutOff * chartH);
-            debugCtx.stroke();
-            debugCtx.beginPath();
-            for (var i = 0; i < binCount; i++)
-            {
-                debugCtx.lineTo(i / binCount * chartW, waveData[i] * chartH / 2 +
-                    chartH / 2);
-            }
-            debugCtx.stroke();
-            var bpmMaxSize = bpmHeight;
-            var size = bpmMaxSize - bpmTime * bpmMaxSize;
-            debugCtx.fillStyle = "#020";
-            debugCtx.fillRect(0, chartH, bpmMaxSize, bpmMaxSize);
-            debugCtx.fillStyle = "#0F0";
-            debugCtx.fillRect((bpmMaxSize - size) / 2, chartH + (bpmMaxSize - size) /
-                2, size, size);
+            debugCtx.fillRect(i * barWidth, chartH, barWidth - debugSpacing, -
+                levelsData[i] * chartH);
         }
+        if (beatTime < 10)
+        {
+            debugCtx.fillStyle = "#FFF";
+        }
+        debugCtx.fillRect(chartW, chartH, aveBarWidth, -volume * chartH);
+        debugCtx.beginPath();
+        debugCtx.moveTo(chartW, chartH - beatCutOff * chartH);
+        debugCtx.lineTo(chartW + aveBarWidth, chartH - beatCutOff * chartH);
+        debugCtx.stroke();
+        debugCtx.beginPath();
+        for (var i = 0; i < binCount; i++)
+        {
+            debugCtx.lineTo(i / binCount * chartW, waveData[i] * chartH / 2 +
+                chartH / 2);
+        }
+        debugCtx.stroke();
+        var bpmMaxSize = bpmHeight;
+        var size = bpmMaxSize - bpmTime * bpmMaxSize;
+        debugCtx.fillStyle = "#020";
+        debugCtx.fillRect(0, chartH, bpmMaxSize, bpmMaxSize);
+        debugCtx.fillStyle = "#0F0";
+        debugCtx.fillRect((bpmMaxSize - size) / 2, chartH + (bpmMaxSize - size) /
+            2, size, size);
+    }
     return {
         onMP3Drop: onMP3Drop,
         onShowDebug: onShowDebug,

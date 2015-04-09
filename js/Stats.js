@@ -17,6 +17,7 @@ var Stats = function ()
 
     var container = document.createElement('div');
     container.id = 'stats';
+    container.className = 'debug';
     container.addEventListener('mousedown', function (event)
     {
         event.preventDefault();

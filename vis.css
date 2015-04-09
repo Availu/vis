@@ -97,6 +97,6 @@ img[src=""] {
     background-color: #000;
 }
 
-img[src=""] {
-    display: none;
+.close-button:after {
+    content: " (Press H to hide this completely.)";
 }
