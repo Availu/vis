@@ -15,7 +15,7 @@ Doesn't work on Internet Explorer 11 (Windows 8.1) and below.
 
 #Credits
 
-Originally created by [@ix](https://github.com/ix).
+Originally created by [@schisma](http://github.com/schisma) (formerly ix).
 
 [JavaScript-ID3-Reader](https://github.com/aadsm/JavaScript-ID3-Reader) to parse id3 tags.
 
