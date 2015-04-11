@@ -1,7 +1,6 @@
 #vis
 
-vis is a visualizer for music files. It is written in pure javascript, using a bit of jQuery just for comfort. It is inspired by the [Monstercat Visualizer](http://youtube.com/Monstercat).
-
+vis is a visualizer for music files. It is written in pure javascript. It is inspired by the [Monstercat Visualizer](http://youtube.com/Monstercat).
 
 
 #Compatibility
@@ -19,4 +18,4 @@ Originally created by [@schisma](http://github.com/schisma) (formerly ix).
 
 [JavaScript-ID3-Reader](https://github.com/aadsm/JavaScript-ID3-Reader) to parse id3 tags.
 
-Now maintained by [@kz-livetune](https://github.com/kz-lt) and [@avail](https://github.com/avail).
+Now maintained by [@kz-lt](https://github.com/kz-lt) and [@avail](https://github.com/avail).
